@@ -199,7 +199,7 @@ class Model(object):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_dir", default="minghang_model_nocrf_50", type=str, help="Path to save, load model")
+    parser.add_argument("--model_dir", default="models\model_multilabel_nocrf_50", type=str, help="Path to save, load model")
     parser.add_argument("--batch_size", default=32, type=int, help="Batch size for prediction")
     # parser.add_argument("--no_cuda", action="store_true", help="Avoid using CUDA when available")
     args = parser.parse_args()

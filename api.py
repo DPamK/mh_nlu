@@ -5,11 +5,22 @@ import config as cfg
 from loguru import logger
 from predict_sentence import Model
 
+class Modelconfig:
+    def __init__(self,model_dir,batch_size) -> None:
+        self.model_dir = model_dir
+        self.batch_size = batch_size
+
+def get_config(cfg):
+    intent_cfg = Modelconfig(cfg.intent_model_dir,cfg.intent_batch_size)
+    sender_cfg = Modelconfig(cfg.sender_model_dir,cfg.sender_batch_size)
+    return intent_cfg,sender_cfg
+
 app = Flask(__name__)
 
 cuter = CutOrder('dict/jiebaword.txt')
-nlu_model = Model(cfg)
-sender_model = Model(cfg)
+intent_cfg,sender_cfg = get_config(cfg)
+nlu_model = Model(intent_cfg)
+sender_model = Model(sender_cfg)
 CORS(app, resources=r'/*')
 
 @app.route('/order',methods=['POST'])
@@ -22,7 +33,7 @@ def process_order():
         'label':[],
         "context": "",
         "phase": "",
-        "sender": "飞行员",
+        "sender": "",
         "task": "",
         'id':-1,
 
@@ -64,6 +75,7 @@ def order_nlu(item,mode):
             cut_str = cuter.cut_order(order)
             newstr = ' '.join(cut_str)
             res = nlu_model.predict(newstr)
+            sender = sender_model.predict(newstr)['intent']
             if len(intent) == 0:
                 intent = get_intent(res['intent'])
             candidates = get_slots(res['slots'])
@@ -92,13 +104,15 @@ def order_nlu(item,mode):
         "id":item['id'],
         "order":order,
         "intent":intent,
-        "sender":item['sender'],
+        "sender":sender,
         'phase':item['phase'] if 'phase' in item else "",
         'context':item['context'] if 'context' in item else "",
         "candidates":candidates
     }
 
     return jsontemp
+
+
 
 if __name__=='__main__':
     app.run(host='0.0.0.0',port=18080,debug=True)
